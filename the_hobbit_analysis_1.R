@@ -78,34 +78,22 @@ scared_hobbit
 # overall sentiment of the hobbit
 
 # create word index numbers
-tidy_hobbit$index <- 1:nrow(tidy_hobbit)
+tidy_hobbit$linenumber <- 1:nrow(tidy_hobbit)
 
 
+the_hobbit$linenumber <- 1:nrow(the_hobbit)
 
 # change me for the hobbit ### 
-afinn <- pride_prejudice %>% 
+afinn <- tidy_hobbit %>% 
   inner_join(get_sentiments("afinn")) %>% 
-  group_by(index = linenumber %/% 80) %>% 
+  group_by(index = linenumber %/% 400) %>% 
   summarise(sentiment = sum(score)) %>% 
   mutate(method = "AFINN")
 
-bing_and_nrc <- bind_rows(pride_prejudice %>% 
-                            inner_join(get_sentiments("bing")) %>%
-                            mutate(method = "Bing et al."),
-                          pride_prejudice %>% 
-                            inner_join(get_sentiments("nrc") %>% 
-                                         filter(sentiment %in% c("positive", 
-                                                                 "negative"))) %>%
-                            mutate(method = "NRC")) %>%
-  count(method, index = linenumber %/% 80, sentiment) %>%
-  spread(sentiment, n, fill = 0) %>%
-  mutate(sentiment = positive - negative)
+afinn %>%
+ggplot(aes(index, sentiment)) +
+  geom_col(show.legend = FALSE)
 
-bind_rows(afinn, 
-          bing_and_nrc) %>%
-  ggplot(aes(index, sentiment, fill = method)) +
-  geom_col(show.legend = FALSE) +
-  facet_wrap(~method, ncol = 1, scales = "free_y")
 
 #### Book Statistics
 # how many characters?
