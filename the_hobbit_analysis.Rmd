@@ -1,0 +1,10 @@
+---
+title: "the_hobbit_analysis"
+author: "Fisher Ankney"
+date: "1/25/2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```

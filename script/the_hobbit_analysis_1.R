@@ -58,6 +58,21 @@ happy_hobbit <- tidy_hobbit %>%
   inner_join(nrcjoy) %>%
   count(word, sort = TRUE)
 
+
+
+joy_meter <- tidy_hobbit %>% 
+  inner_join(get_sentiments("nrc")) %>% 
+  filter(sentiment == "joy") %>%
+  group_by(index = linenumber %/% 500) %>% 
+  summarise(sentiment = n()) %>% 
+  mutate(method = "NRC")
+
+joy_meter %>%
+  ggplot(aes(index, sentiment)) +
+  geom_col(show.legend = FALSE)
+
+
+
 # sad words
 nrcsad <- get_sentiments("nrc") %>%
   filter(sentiment == "sadness")
@@ -65,7 +80,10 @@ nrcsad <- get_sentiments("nrc") %>%
 sad_hobbit <- tidy_hobbit %>%
   inner_join(nrcsad) %>% 
   count(word, sort = TRUE)
-         
+     
+
+
+    
 # fearful words 
 nrcfear <- get_sentiments("nrc") %>%
   filter(sentiment == "fear")
@@ -75,6 +93,18 @@ scared_hobbit <- tidy_hobbit %>%
   count(word, sort = TRUE)
 scared_hobbit
 
+# fear meter
+fear_meter <- tidy_hobbit %>% 
+  inner_join(get_sentiments("nrc")) %>% 
+  filter(sentiment == "fear") %>%
+  group_by(index = linenumber %/% 500) %>% 
+  summarise(sentiment = n()) %>% 
+  mutate(method = "NRC")
+
+fear_meter %>%
+  ggplot(aes(index, sentiment)) +
+  geom_col(show.legend = FALSE)
+
 # overall sentiment of the hobbit
 
 # create word index numbers
@@ -83,7 +113,7 @@ tidy_hobbit$linenumber <- 1:nrow(tidy_hobbit)
 
 the_hobbit$linenumber <- 1:nrow(the_hobbit)
 
-# change me for the hobbit ### 
+# sentiment analysis positive v negative
 afinn <- tidy_hobbit %>% 
   inner_join(get_sentiments("afinn")) %>% 
   group_by(index = linenumber %/% 400) %>% 
@@ -110,24 +140,48 @@ str_count(the_hobbit, "[.!?]") # 5,967
 # 200 word per minute ~average adult reading speed, 60 min / hour
 
 
+# gandalf analysis 
+
+gandalf_meter <- tidy_hobbit %>% 
+  
+  inner_join(get_sentiments("nrc")) %>% 
+  filter(sentiment == "fear") %>%
+  group_by(index = linenumber %/% 500) %>% 
+  summarise(sentiment = n()) %>% 
+  mutate(method = "NRC")
+
+fear_meter %>%
+  ggplot(aes(index, sentiment)) +
+  geom_col(show.legend = FALSE)
+
+
+
+
+
+
+
+
+
+
+
 
 
 ### Comparing Dwarves
 # string count the number of times each dwarf is mentioned
 
-dwalin <- str_count(the_hobbit, "Dwalin")
-balin <- str_count(the_hobbit, "Balin")
-kili <- str_count(the_hobbit, "Kili")
-fili <- str_count(the_hobbit, "Fili")
-dori <- str_count(the_hobbit, "Dori")
-nori <- str_count(the_hobbit, "Nori")
-ori <- str_count(the_hobbit, "Ori")
-oin <- str_count(the_hobbit, "Oin")
-gloin <- str_count(the_hobbit, "Gloin")
-bifur <- str_count(the_hobbit, "Bifur")
-bofur <- str_count(the_hobbit, "Bofur")
-bombur <- str_count(the_hobbit, "Bombur")
-thorin <- str_count(the_hobbit, "Thorin")
+dwalin <- str_count(tidy_hobbit, "dwalin")
+balin <- str_count(tidy_hobbit, "balin")
+kili <- str_count(tidy_hobbit, "kili")
+fili <- str_count(tidy_hobbit, "fili")
+dori <- str_count(tidy_hobbit, "dori")
+nori <- str_count(tidy_hobbit, "nori")
+ori <- str_count(tidy_hobbit, "ori")
+oin <- str_count(tidy_hobbit, "oin")
+gloin <- str_count(tidy_hobbit, "gloin")
+bifur <- str_count(tidy_hobbit, "bifur")
+bofur <- str_count(tidy_hobbit, "bofur")
+bombur <- str_count(tidy_hobbit, "bombur")
+thorin <- str_count(tidy_hobbit, "thorin")
 
 # plot number of mentions per dwarf in bar chart
 
@@ -135,6 +189,7 @@ thorin <- str_count(the_hobbit, "Thorin")
 dwarves <- c(dwalin, balin, kili, fili, dori,
              nori, ori, oin, gloin, bifur,
              bofur, bombur, thorin)
+
 dwarves <- names(c("dwalin", "balin", "kili", "fili", "dori",
                    "nori", "ori", "oin", "gloin", "bifur",
                    "bofur", "bombur", "thorin")
