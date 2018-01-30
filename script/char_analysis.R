@@ -18,36 +18,67 @@ library('tidytext')
 ## Source > https://archive.org/stream/TheHobbitByJ.R.RTolkien/The%20Hobbit%20by%20J.R.R%20Tolkien_djvu.txt
 the_hobbit <- as.tibble(read_file("the_hobbit/input/hobbit_body.txt"))
 
+tidy_hobbit <- the_hobbit %>%
+  unnest_tokens(word, value)      # split words into elements of a df using tidytext
 
+tidy_hobbit <- tidy_hobbit %>%
+  anti_join(stop_words)           # remove words like to, it, and the
+
+tidy_hobbit$linenumber <- 1:nrow(tidy_hobbit)
 
 # Main Character Frequency
-bilbo <- str_count(the_hobbit, "Bilbo")
-bilbo
+bilbo_count <- str_count(the_hobbit, "Bilbo")
+bilbo_count
 
-thorin <- str_count(the_hobbit, "Thorin")
-thorin
+thorin_count <- str_count(the_hobbit, "Thorin")
+thorin_count
 
-gandalf <- str_count(the_hobbit, "Gandalf")
-gandalf
+gandalf_count <- str_count(the_hobbit, "Gandalf")
+gandalf_count
 
-smaug <- str_count(the_hobbit, "Smaug")
-smaug
+smaug_count <- str_count(the_hobbit, "Smaug")
+smaug_count
 
-gollum <- str_count(the_hobbit, "Gollum")
-gollum
+gollum_count <- str_count(the_hobbit, "Gollum")
+gollum_count
 
-bard <- str_count(the_hobbit, "Bard")
-bard
+bard_count <- str_count(the_hobbit, "Bard")
+bard_count
 
 
 
 # Character Frequency Timeline
-bilbo
-thorin
-gandalf
-smaug
-gollum
-bard
+
+bilbo_meter <- tidy_hobbit %>%
+  filter(word == "bilbo")  %>%
+  group_by(index = linenumber %% 100) %>%
+  summarise(count = n())
+
+bilbo_meter %>%
+  ggplot(aes(index, count)) +
+  geom_col(show.legend = FALSE,
+           fill = "forestgreen") + 
+  xlab("Book Progression") + 
+  ylab("Bilbo Presence") + 
+  labs(title = "How often Bilbo is mentioned in 'The Hobbit'") +
+  theme_minimal()
+
+
+
+gandalf_meter <- tidy_hobbit %>%
+  filter(word == "gollum")  %>%
+  group_by(index = linenumber %% 100) %>%
+  summarise(count = n())
+
+gandalf_meter %>%
+  ggplot(aes(index, count)) +
+  geom_col(show.legend = FALSE,
+           color = "forestgreen") + 
+  xlab("Book Progression") + 
+  ylab("Bilbo Presence") + 
+  labs(title = "How often Bilbo is mentioned in 'The Hobbit'") +
+  theme_minimal()
+  
 
 # The 13 Dwarves
 dwalin <- str_count(tidy_hobbit, "dwalin")
