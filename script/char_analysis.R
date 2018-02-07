@@ -46,65 +46,28 @@ bard_count <- str_count(the_hobbit, "Bard")
 bard_count
 
 
-
-# Character Frequency Timeline
-
-bilbo_meter <- tidy_hobbit %>%
-  filter(word == "bilbo")  %>%
-  group_by(index = linenumber %% 100) %>%
-  summarise(count = n())
-
-bilbo_meter %>%
-  ggplot(aes(index, count)) +
-  geom_col(show.legend = FALSE,
-           fill = "forestgreen") + 
-  xlab("Book Progression") + 
-  ylab("Bilbo Presence") + 
-  labs(title = "How often Bilbo is mentioned in 'The Hobbit'") +
-  theme_minimal()
-
-
-
-gandalf_meter <- tidy_hobbit %>%
-  filter(word == "gollum")  %>%
-  group_by(index = linenumber %% 100) %>%
-  summarise(count = n())
-
-gandalf_meter %>%
-  ggplot(aes(index, count)) +
-  geom_col(show.legend = FALSE,
-           color = "forestgreen") + 
-  xlab("Book Progression") + 
-  ylab("Bilbo Presence") + 
-  labs(title = "How often Bilbo is mentioned in 'The Hobbit'") +
-  theme_minimal()
-  
-
 # The 13 Dwarves
-dwalin <- str_count(tidy_hobbit, "dwalin")
-balin <- str_count(tidy_hobbit, "balin")
-kili <- str_count(tidy_hobbit, "kili")
-fili <- str_count(tidy_hobbit, "fili")
-dori <- str_count(tidy_hobbit, "dori")
-nori <- str_count(tidy_hobbit, "nori")
-ori <- str_count(tidy_hobbit, "ori")
-oin <- str_count(tidy_hobbit, "oin")
-gloin <- str_count(tidy_hobbit, "gloin")
-bifur <- str_count(tidy_hobbit, "bifur")
-bofur <- str_count(tidy_hobbit, "bofur")
-bombur <- str_count(tidy_hobbit, "bombur")
-thorin <- str_count(tidy_hobbit, "thorin")
+dwalin <- sum(str_count(tidy_hobbit$word, "dwalin"))
+balin <- sum(str_count(tidy_hobbit$word, "balin"))
+kili <- sum(str_count(tidy_hobbit$word, "kili"))
+fili <- sum(str_count(tidy_hobbit$word, "fili"))
+dori <- sum(str_count(tidy_hobbit$word, "dori"))
+nori <- sum(str_count(tidy_hobbit$word, "nori"))
+ori <- sum(str_count(tidy_hobbit$word, "ori"))
+oin <- sum(str_count(tidy_hobbit$word, "oin"))
+gloin <- sum(str_count(tidy_hobbit$word, "gloin"))
+bifur <- sum(str_count(tidy_hobbit$word, "bifur"))
+bofur <- sum(str_count(tidy_hobbit$word, "bofur"))
+bombur <- sum(str_count(tidy_hobbit$word, "bombur"))
+thorin <- sum(str_count(tidy_hobbit$word, "thorin"))
 
 # plot dwarf mentions most popular to least popular
 
-# not working
-dwarves <- c(dwalin, balin, kili, fili, dori,
+dwarves <- as.tibble(c(dwalin, balin, kili, fili, dori,
              nori, ori, oin, gloin, bifur,
-             bofur, bombur, thorin)
+             bofur, bombur, thorin))
 
-dwarves <- names(c("dwalin", "balin", "kili", "fili", "dori",
+dwarves$names <- c("dwalin", "balin", "kili", "fili", "dori",
                    "nori", "ori", "oin", "gloin", "bifur",
                    "bofur", "bombur", "thorin")
-)
-
-
+dwarves

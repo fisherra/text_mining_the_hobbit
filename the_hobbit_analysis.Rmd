@@ -1,10 +1,308 @@
 ---
-title: "the_hobbit_analysis"
+title: "The Hobbit Text Analysis"
 author: "Fisher Ankney"
 date: "1/25/2018"
 output: html_document
 ---
 
-```{r setup, include=FALSE}
-knitr::opts_chunk$set(echo = TRUE)
+Introduction text goes here
+
+sections of the study 
+
+0. organizing the data into a tidy text
+1. word frequency analysis
+2. character analysis
+3. sentiment analysis 
+
+
+Load Libraries
+```{r, message=FALSE}
+library('tidyverse')
+library('stringr')
+library('tidytext')
+library('wordcloud') 
 ```
+
+Heres the data source -> https://archive.org/stream/TheHobbitByJ.R.RTolkien/The%20Hobbit%20by%20J.R.R%20Tolkien_djvu.txt
+
+Load Data
+```{r}
+the_hobbit <- as.tibble(read_file("input/hobbit_body.txt"))
+```
+
+
+Tidy Data 
+```{r, message=FALSE}
+tidy_hobbit <- the_hobbit %>%
+  unnest_tokens(word, value) %>%
+  anti_join(stop_words)       
+tidy_hobbit
+```
+
+
+1. word frequency analysis
+
+basic statistics
+```{r}
+# How many words?
+str_count(the_hobbit, " ") + 1 # 95,874 words
+
+# How many sentences?
+str_count(the_hobbit, "[.!?]") # ~5,967 sentences
+
+# How long to read the hobbit? (200 wpm reading speed)
+((str_count(the_hobbit, " ") + 1) / 200) / 60 # ~8 hours 
+```
+
+
+freq_plot
+```{r}
+## A plot of the most common words
+tidy_hobbit %>%
+  count(word, sort = TRUE) %>%        # count words, sort by most highest occurance
+  filter(n > 80) %>%                  # only show words that have been used 80+ times
+  mutate(word = reorder(word, n)) %>%  
+  ggplot(aes(word, n)) +              # plot the words by number of occurance
+    geom_col(fill = "darkslateblue") + 
+  xlab("Word") + 
+  ylab("Number of Occurances") + 
+  labs(title = "Most Common Meaningful Words in 'The Hobbit'") +
+  coord_flip() +                      
+  theme_minimal()
+```
+
+word cloud
+```{r}
+## A word cloud of the 100 most common words
+hobbit_cloud <- tidy_hobbit %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100,
+                 color = brewer.pal(n = 8,"Set1")))
+hobbit_cloud
+
+```
+
+
+
+
+2. character analysis
+
+```{r}
+tidy_hobbit$linenumber <- 1:nrow(tidy_hobbit)
+```
+
+
+work on this bit
+```{r}
+# Main Character Frequency
+bilbo_count <- str_count(the_hobbit, "Bilbo")
+bilbo_count
+
+thorin_count <- str_count(the_hobbit, "Thorin")
+thorin_count
+
+gandalf_count <- str_count(the_hobbit, "Gandalf")
+gandalf_count
+
+smaug_count <- str_count(the_hobbit, "Smaug")
+smaug_count
+
+gollum_count <- str_count(the_hobbit, "Gollum")
+gollum_count
+
+bard_count <- str_count(the_hobbit, "Bard")
+bard_count
+
+
+# The 13 Dwarves
+dwalin <- sum(str_count(tidy_hobbit$word, "dwalin"))
+balin <- sum(str_count(tidy_hobbit$word, "balin"))
+kili <- sum(str_count(tidy_hobbit$word, "kili"))
+fili <- sum(str_count(tidy_hobbit$word, "fili"))
+dori <- sum(str_count(tidy_hobbit$word, "dori"))
+nori <- sum(str_count(tidy_hobbit$word, "nori"))
+ori <- sum(str_count(tidy_hobbit$word, "ori"))
+oin <- sum(str_count(tidy_hobbit$word, "oin"))
+gloin <- sum(str_count(tidy_hobbit$word, "gloin"))
+bifur <- sum(str_count(tidy_hobbit$word, "bifur"))
+bofur <- sum(str_count(tidy_hobbit$word, "bofur"))
+bombur <- sum(str_count(tidy_hobbit$word, "bombur"))
+thorin <- sum(str_count(tidy_hobbit$word, "thorin"))
+
+# plot dwarf mentions most popular to least popular
+
+dwarves <- as.tibble(c(dwalin, balin, kili, fili, dori,
+             nori, ori, oin, gloin, bifur,
+             bofur, bombur, thorin))
+
+dwarves$names <- c("dwalin", "balin", "kili", "fili", "dori",
+                   "nori", "ori", "oin", "gloin", "bifur",
+                   "bofur", "bombur", "thorin")
+dwarves
+
+```
+
+
+
+3. sentiment analysis 
+
+
+```{r}
+## Adjective Analysis
+
+# Joyful Words 
+nrcjoy <- get_sentiments("nrc") %>%    # from the tidytext
+  filter(sentiment == "joy")
+
+happy_cloud <- tidy_hobbit %>%
+  inner_join(nrcjoy) %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100,
+                 color = brewer.pal(n = 8,"Dark2")))
+happy_cloud
+
+# Frequency of joy throught the book
+joy_meter <- tidy_hobbit %>% 
+  inner_join(get_sentiments("nrc")) %>% 
+  filter(sentiment == "joy") %>%
+  group_by(index = linenumber %/% 500) %>% 
+  summarise(sentiment = n()) %>% 
+  mutate(method = "NRC")
+
+joy_meter %>%
+  ggplot(aes(index, sentiment)) +
+  geom_col(show.legend = FALSE,
+           fill = "orange") + 
+  xlab("Book Progression") + 
+  ylab("Joy Meter") + 
+  labs(title = "Words with Joyous Sentiment in 'The Hobbit'") +
+  theme_minimal()
+
+
+
+
+# Sad Words 
+nrcsad <- get_sentiments("nrc") %>%    # from the tidytext
+  filter(sentiment == "sadness")
+
+sad_cloud <- tidy_hobbit %>%
+  inner_join(nrcsad) %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100,
+                 color = brewer.pal(n = 8,"Dark2")))
+
+
+# Frequency of sadness throught the book
+sad_meter <- tidy_hobbit %>% 
+  inner_join(get_sentiments("nrc")) %>% 
+  filter(sentiment == "sadness") %>%
+  group_by(index = linenumber %/% 500) %>% 
+  summarise(sentiment = n()) %>% 
+  mutate(method = "NRC")
+
+sad_meter %>%
+  ggplot(aes(index, sentiment)) +
+  geom_col(show.legend = FALSE, 
+           fill = "lightsteelblue") + 
+  xlab("Book Progression") + 
+  ylab("Sad Meter") + 
+  labs(title = "Words with Sad Sentiment in 'The Hobbit'") +
+  theme_minimal() + 
+
+  
+## Fearful Words
+nrcfear <- get_sentiments("nrc") %>%   
+  filter(sentiment == "fear")
+
+fear_cloud <- tidy_hobbit %>%
+  inner_join(nrcfear) %>%
+  count(word) %>%
+  with(wordcloud(word, n, max.words = 100,
+                 color = brewer.pal(n = 8,"Dark2")))
+
+
+# Frequency of sadness throught the book
+fear_meter <- tidy_hobbit %>% 
+  inner_join(get_sentiments("nrc")) %>% 
+  filter(sentiment == "fear") %>%
+  group_by(index = linenumber %/% 500) %>% 
+  summarise(sentiment = n()) %>% 
+  mutate(method = "NRC")
+
+fear_meter %>%
+  ggplot(aes(index, sentiment)) +
+  geom_col(show.legend = FALSE, 
+           fill = "Red4") + 
+  xlab("Book Progression") + 
+  ylab("Fear Meter") + 
+  labs(title = "Words with Fear Sentiment in 'The Hobbit'") +
+  theme_minimal()
+
+
+### Happy, Sad, and Fear all together now
+ggplot() + 
+  geom_smooth(aes(fear_meter$index,
+                  fear_meter$sentiment, 
+                  color = "Fear"),
+              se = FALSE) + 
+  geom_smooth(aes(joy_meter$index, 
+                  joy_meter$sentiment, 
+                  color = "Joy"),
+              se = FALSE) + 
+  geom_smooth(aes(sad_meter$index, 
+                  sad_meter$sentiment, 
+                  color = "Sadness"),
+              se = FALSE) + 
+  xlab("Book Progression Index") + 
+  ylab("Sentiment Index") +
+  labs(
+    title = "Specific Sentiment in 'The Hobbit'"
+  ) + 
+  theme_minimal() + 
+  scale_color_manual(
+    name = "Sentiment",
+    values = c("red4", "orange", "lightsteelblue")
+  )
+
+
+
+# Overall Sentiment
+hobbit_sent <- tidy_hobbit %>% 
+  inner_join(get_sentiments("afinn")) %>% 
+  group_by(index = linenumber %/% 500) %>% 
+  summarise(sentiment = sum(score)) %>% 
+  mutate(method = "AFINN")
+
+hobbit_sent[["sign"]] = ifelse(hobbit_sent[["sentiment"]] >=0, "positive", "negative")
+
+hobbit_sent %>%
+  ggplot() + 
+  geom_col(aes(index, 
+               sentiment,
+               fill = sign)
+           ) + 
+  scale_fill_manual(name = "Sentiment",
+                    values = c("positive" = "royalblue4", "negative" = "red4"),
+                    guide = guide_legend(reverse=TRUE)) + 
+  xlab("Book Progression Index") + 
+  ylab("Sentiment Index") + 
+  ggtitle("General AFINN Method Sentiment in 'The Hobbit'") + 
+  theme_minimal()
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
