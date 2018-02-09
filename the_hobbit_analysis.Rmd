@@ -4,97 +4,186 @@ author: "Fisher Ankney"
 date: "1/25/2018"
 output: html_document
 ---
+After recently finishing J.R.R. Tolkein's classic, *The Hobbit*, I decided to try my hand at text mining in R. Now, I've never worked worked with large strings of text in R before, so I decided to look around the internet for a little bit of help and inspiration. After reading about [Text Mining with R](https://www.tidytextmining.com/),
+R-Bloggers Metallica lyric analysis [post](https://www.r-bloggers.com/hardwired-for-tidy-text/), and 
+Data Camp's text mining blog [post](https://www.datacamp.com/community/blog/text-mining-in-r-and-python-tips), I began to understand the challenge that awaited, and what I wanted to explore in Tolkein's work. 
 
-Introduction text goes here
+I decided to break up my Hobbit text project into three parts - A traditional word frequency analysis, An individual character assessment, and finally various measurements sentiment throughout the novel. If you want to learn more about text mining in R, or if you're just interested in hobbits I hope you find this investigation helpful. [Here](https://archive.org/stream/TheHobbitByJ.R.RTolkien/The%20Hobbit%20by%20J.R.R%20Tolkien_djvu.txt) is the copy of the hobbit that I'm using if you want to follow along. 
 
-sections of the study 
+First things first, let's load up the libraries we'll be using and tidy up the dataset. 
 
-0. organizing the data into a tidy text
-1. word frequency analysis
-2. character analysis
-3. sentiment analysis 
-
+<br  />
 
 Load Libraries
 ```{r, message=FALSE}
-library('tidyverse')
-library('stringr')
-library('tidytext')
-library('wordcloud') 
+library('tidyverse')    # used for EVERYTHING
+library('stringr')      # used for string (text) manipulation
+library('tidytext')     # used for text mining
+library('wordcloud')    # used for creating cool text visualizations
 ```
 
-Heres the data source -> https://archive.org/stream/TheHobbitByJ.R.RTolkien/The%20Hobbit%20by%20J.R.R%20Tolkien_djvu.txt
+
+<br  />
 
 Load Data
 ```{r}
-the_hobbit <- as.tibble(read_file("input/hobbit_body.txt"))
+the_hobbit <- as.tibble(read_file("input/hobbit_body.txt")) 
 ```
 
+<br  />
 
 Tidy Data 
 ```{r, message=FALSE}
-tidy_hobbit <- the_hobbit %>%
-  unnest_tokens(word, value) %>%
-  anti_join(stop_words)       
-tidy_hobbit
+tidy_hobbit <- the_hobbit %>%      # move the_hobbit text into tidy_hobbit
+  unnest_tokens(word, value) %>%   # each word is given a cell in tibble
+  anti_join(stop_words)            # take out meaningless words lke a, to, and it
 ```
 
+<br  />
 
-1. word frequency analysis
+So here's the first look at our Hobbit text. A quick note: I cleaned up the hobbit text to start at Chapter 1 before I saved it as an input file. *head(the_hobbit)* reveals a 1x1 table with the entire novel stored as a single string in the tibble. This formatting has some uses so I'll keep a copy of it, but the tidy text formatted *tidy_hobbit* has more uses.
 
-basic statistics
+*tidy_hobbit* has cut out some words - in, a, in, the, there, and so on. That's the *anti_join(stop_words)* at work. *anti_join()* is a dplyr function we loaded from the tidyverse, it's job is to return all rows from x where there are not matching values in y. In this case x is *the_hobbit*, y is stop_words, a tibble from the tidytext library. Also notice that now each word has it's own row in the tibble, which is now length over 30,000 elements long.
+
+<br  />
+
 ```{r}
-# How many words?
-str_count(the_hobbit, " ") + 1 # 95,874 words
+head(the_hobbit)
+```
+
+```{r}
+head(tidy_hobbit)
+```
+
+<br  />
+
+### Word Frequency Analysis 
+
+Let's see some basic summaries on the hobbit text first.
+
+```{r}
+# How many words are in The Hobbit?
+str_count(the_hobbit, " ") + 1
 
 # How many sentences?
-str_count(the_hobbit, "[.!?]") # ~5,967 sentences
+str_count(the_hobbit, "[.!?]")
 
-# How long to read the hobbit? (200 wpm reading speed)
-((str_count(the_hobbit, " ") + 1) / 200) / 60 # ~8 hours 
+# How long should the book take to read?
+((str_count(the_hobbit, " ") + 1) / 200) / 60 # number of words / 200 words-per-minute / 60 minutes
 ```
 
+<br  />
 
-freq_plot
+I chose to use the original variable the_hobbit, as tidy text doesn't retain the punctuation, and stop words still count as words. *str_count( )* counts how many times you're given variables appear within the string it's analyzing. 200 words-per-minute is a below average adult reading speed, but The Hobbit is a story best relished, so that'll do.
+ 
+<br  />
+
+#### Frequency Plot
 ```{r}
-## A plot of the most common words
 tidy_hobbit %>%
-  count(word, sort = TRUE) %>%        # count words, sort by most highest occurance
-  filter(n > 80) %>%                  # only show words that have been used 80+ times
-  mutate(word = reorder(word, n)) %>%  
-  ggplot(aes(word, n)) +              # plot the words by number of occurance
-    geom_col(fill = "darkslateblue") + 
-  xlab("Word") + 
+  count(word, sort = TRUE) %>%          # count words
+  filter(n > 80) %>%                    # only show words that have been used 80+ times
+  mutate(word = reorder(word, n)) %>%   # sorts words by decending occurance
+  ggplot(aes(word, n)) +                # plot the words vs number of occurances
+    geom_col(fill = "darkslateblue") +  # blue bars
+  xlab("Word") +                        # labels
   ylab("Number of Occurances") + 
   labs(title = "Most Common Meaningful Words in 'The Hobbit'") +
-  coord_flip() +                      
-  theme_minimal()
+  coord_flip() +                        # sideways box-plot for aestetic purposes
+  theme_minimal()                       # I don't like the gray default theme
 ```
 
-word cloud
+The top five most common words in *The Hobbit* are Bilbo, dwarves, Thorin, time, and Gandalf. The only non-character word is time, but I bet the word time is pretty common in most novels. I'm suprised to see the word don't on the list, I would have classified it as a stop word. There isn't much to be suprised about on this list if you've read the book. If you haven't read the book, the list gives you a pretty good idea of what to expect!
+
+<br  />
+
+#### Word Cloud
 ```{r}
-## A word cloud of the 100 most common words
 hobbit_cloud <- tidy_hobbit %>%
-  count(word) %>%
-  with(wordcloud(word, n, max.words = 100,
-                 color = brewer.pal(n = 8,"Set1")))
-hobbit_cloud
-
+  count(word) %>%                                      # provide a count of each word
+  with(wordcloud(word, n, max.words = 100,             # using the wordcloud library, plot word, according to n (number of count), with 100 maximum words)
+                 color = brewer.pal(n = 8,"Set1")))    # use RColorBrwer pallete 'Set1'
 ```
 
 
+The top 100 words used in The Hobbit are all jumbled together in this word cloud. It's basically the same idea as the frequency plot, except it gives less information in a more artistic way. I'm not sure what's with the color coding, I would have thought all 8 pallete colors would be used, not just five. The size of the words reflect their frequency though. 
 
+<br  />
 
-2. character analysis
+## Character Analysis
 
 ```{r}
 tidy_hobbit$linenumber <- 1:nrow(tidy_hobbit)
 ```
 
 
-work on this bit
+Work in Progress
 ```{r}
-# Main Character Frequency
+main_chr <- as.tibble(c("bilbo", "thorin", "gandalf", "smaug", "gollum", "bard")) %>%
+  unnest_tokens(word, value)
+
+colnames(main_chr) <- "word"
+
+
+main_chr_num <- tidy_hobbit %>% 
+  semi_join(main_chr, "word") %>%
+  count(word, sort = TRUE) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) + 
+    geom_col(fill = "darkslateblue")
+main_chr_num
+```
+
+
+```{r}
+main_chr_pres <- tidy_hobbit %>% 
+  semi_join(main_chr, "word") %>%
+  ggplot() + 
+  geom_point(
+    aes(word, linenumber)
+  ) + 
+  labs(title = "Main Character Apperances") +
+  xlab("Character") + 
+  ylab("")+
+  coord_flip() + 
+  theme_minimal() + 
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+main_chr_pres
+  
+```
+
+
+
+
+tidy_hobbit %>%
+  count(word, sort = TRUE) %>%          # count words
+  filter(n > 80) %>%                    # only show words that have been used 80+ times
+  mutate(word = reorder(word, n)) %>%   # sorts words by decending occurance
+  ggplot(aes(word, n)) +                # plot the words vs number of occurances
+    geom_col(fill = "darkslateblue") +  # blue bars
+  xlab("Word") +                        # labels
+  ylab("Number of Occurances") + 
+  labs(title = "Most Common Meaningful Words in 'The Hobbit'") +
+  coord_flip() +                        # sideways box-plot for aestetic purposes
+  theme_minimal()                       # I don't like the gray default theme
+
+
+
+
+
+# Frequency of joy throught the book
+joy_meter <- tidy_hobbit %>% 
+  inner_join(get_sentiments("nrc")) %>% 
+  filter(sentiment == "joy") %>%
+  group_by(index = linenumber %/% 500) %>% 
+  summarise(sentiment = n()) %>% 
+  mutate(method = "NRC")
+
+```
+
+
 bilbo_count <- str_count(the_hobbit, "Bilbo")
 bilbo_count
 
@@ -112,8 +201,11 @@ gollum_count
 
 bard_count <- str_count(the_hobbit, "Bard")
 bard_count
+```
 
 
+Work in Progress
+```{r, eval=FALSE}
 # The 13 Dwarves
 dwalin <- sum(str_count(tidy_hobbit$word, "dwalin"))
 balin <- sum(str_count(tidy_hobbit$word, "balin"))
@@ -131,23 +223,22 @@ thorin <- sum(str_count(tidy_hobbit$word, "thorin"))
 
 # plot dwarf mentions most popular to least popular
 
-dwarves <- as.tibble(c(dwalin, balin, kili, fili, dori,
-             nori, ori, oin, gloin, bifur,
-             bofur, bombur, thorin))
+#dwarves <- as.tibble(c(dwalin, balin, kili, fili, dori,
+#             nori, ori, oin, gloin, bifur,
+#             bofur, bombur, thorin))
 
-dwarves$names <- c("dwalin", "balin", "kili", "fili", "dori",
-                   "nori", "ori", "oin", "gloin", "bifur",
-                   "bofur", "bombur", "thorin")
-dwarves
-
+#dwarves$names <- c("dwalin", "balin", "kili", "fili", "dori",
+#                   "nori", "ori", "oin", "gloin", "bifur",
+#                   "bofur", "bombur", "thorin")
+#dwarves
 ```
 
 
+<br  />
 
-3. sentiment analysis 
+## Sentiment Analysis
 
-
-```{r}
+```{r, eval=FALSE}
 ## Adjective Analysis
 
 # Joyful Words 
@@ -160,7 +251,9 @@ happy_cloud <- tidy_hobbit %>%
   with(wordcloud(word, n, max.words = 100,
                  color = brewer.pal(n = 8,"Dark2")))
 happy_cloud
+```
 
+```{r, eval=FALSE}
 # Frequency of joy throught the book
 joy_meter <- tidy_hobbit %>% 
   inner_join(get_sentiments("nrc")) %>% 
@@ -178,9 +271,6 @@ joy_meter %>%
   labs(title = "Words with Joyous Sentiment in 'The Hobbit'") +
   theme_minimal()
 
-
-
-
 # Sad Words 
 nrcsad <- get_sentiments("nrc") %>%    # from the tidytext
   filter(sentiment == "sadness")
@@ -190,6 +280,7 @@ sad_cloud <- tidy_hobbit %>%
   count(word) %>%
   with(wordcloud(word, n, max.words = 100,
                  color = brewer.pal(n = 8,"Dark2")))
+sad_cloud
 
 
 # Frequency of sadness throught the book
@@ -207,7 +298,7 @@ sad_meter %>%
   xlab("Book Progression") + 
   ylab("Sad Meter") + 
   labs(title = "Words with Sad Sentiment in 'The Hobbit'") +
-  theme_minimal() + 
+  theme_minimal() 
 
   
 ## Fearful Words
@@ -263,9 +354,9 @@ ggplot() +
     name = "Sentiment",
     values = c("red4", "orange", "lightsteelblue")
   )
+```
 
-
-
+```{r, eval=FALSE}
 # Overall Sentiment
 hobbit_sent <- tidy_hobbit %>% 
   inner_join(get_sentiments("afinn")) %>% 
