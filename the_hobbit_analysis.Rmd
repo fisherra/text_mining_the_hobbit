@@ -2,7 +2,7 @@
 title: "The Hobbit Text Mining"
 author: "Fisher Ankney"
 date: "1/25/2018"
-output: html_document
+output: md_document
 ---
 
 After recently finishing J.R.R. Tolkien's *The Hobbit*, I wanted to dive further into Tolkien’s world by trying my hand at text mining the book in R. Without any previous text mining experience or goals for the project, I decided to do what any reasonable person would do and I looked to the internet for help. After reading a text mining with R [e-book](https://www.tidytextmining.com/), this R-Bloggers Metallica lyric analysis [post](https://www.r-bloggers.com/hardwired-for-tidy-text/), and this Data Camp text mining blog [post](https://www.datacamp.com/community/blog/text-mining-in-r-and-python-tips), I had some idea of what I wanted to do. I think in the end the analysis went well enough, if not a little bit long, but you be the judge.
