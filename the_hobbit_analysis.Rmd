@@ -8,7 +8,7 @@ output: html_document
 After recently finishing J.R.R. Tolkien's *The Hobbit*, I wanted to dive further into Tolkien’s world by trying my hand at text mining the book in R. Without any previous text mining experience or goals for the project, I decided to do what any reasonable person would do and I looked to the internet for help. After reading a text mining with R [e-book](https://www.tidytextmining.com/), this R-Bloggers Metallica lyric analysis [post](https://www.r-bloggers.com/hardwired-for-tidy-text/), and this Data Camp text mining blog [post](https://www.datacamp.com/community/blog/text-mining-in-r-and-python-tips), I had some idea of what I wanted to do. I think in the end the analysis went well enough, if not a little bit long, but you be the judge.
 
 
-This text project is broken into three parts – a traditional word frequency analysis, a character analysis, and a sentiment analysis. [Here](https://archive.org/stream/TheHobbitByJ.R.RTolkien/The%20Hobbit%20by%20J.R.R%20Tolkien_djvu.txt) is the copy of the hobbit that I'm using if you want to follow along. Without further ado – Hobbits. 
+This text project is broken into three parts – a traditional word frequency analysis, a character analysis, and a sentiment analysis. [Here](https://archive.org/stream/TheHobbitByJ.R.RTolkien/The%20Hobbit%20by%20J.R.R%20Tolkien_djvu.txt) is the copy of the hobbit that I'm using if you want to follow along. Without further ado – here's hobbits. 
 
 <br  />
 
@@ -47,7 +47,7 @@ head(the_hobbit)
 head(tidy_hobbit)
 ```
 
-Here's the first look at the text. A quick note: I cleaned up the hobbit text to start at Chapter 1 and end the finish of the last chapter before I saved it as an input file. *head(the_hobbit)* reveals a 1x1 table with the entire novel stored as a single string in the tibble. This formatting has some uses so I'll keep a copy of it, but the tidy text formatted *tidy_hobbit* has more uses.
+A quick note: I cleaned up the hobbit text to start at Chapter 1 and end the finish of the last chapter before I saved it as an input file. *head(the_hobbit)* reveals a 1x1 table with the entire novel stored as a single string in the tibble. This formatting has some uses so I'll keep a copy of it, but the transformed text, *tidy_hobbit* is even more useful.
 
 *tidy_hobbit* has cut out some words - in, a, in, the, there, and so on. That's the *anti_join(stop_words)* at work. *anti_join( )* is a *dplyr* function loaded from the tidyverse, it's job is to return all rows from x where there are not matching values in y. In this case x is *the_hobbit*, y is *stop_words*, a tibble from the tidytext library. Also notice that now each word has it's own row in the tibble, pretty tidy. 
 
@@ -123,15 +123,15 @@ Now let's dig into the main characters of the novel. Who are the most important 
 #### Main Character Count
 ```{r}
 main_chr <- as.tibble(c("bilbo", "thorin", "gandalf", "smaug", "gollum", "bard")) %>%
-  unnest_tokens(word, value)     # defining the main characers
+  unnest_tokens(word, value)      # defining the main characers
 
-colnames(main_chr) <- "word"  # naming the column of characters
+colnames(main_chr) <- "word"      # naming the column of characters
 
 main_chr_num <- tidy_hobbit %>%   # moving tidy_hobbit to a new var
-  semi_join(main_chr, "word") %>%   # only keep tidy_hobbit lines that have main_chr
+  semi_join(main_chr, "word") %>% # only keep tidy_hobbit lines that have main_chr
   count(word, sort = TRUE) %>%          # count presence of each character
   mutate(word = reorder(word, n)) %>%   # reorder characters by number of occurance
-  ggplot(aes(word, n)) +                         # plot the results
+  ggplot(aes(word, n)) +                # plot the results
     geom_col(fill = "darkslateblue") + 
     labs(title = "Main Characters in 'The Hobbit'") + 
     xlab("Character") + 
@@ -144,13 +144,13 @@ As we saw in the word frequency plot, Bilbo is not only the most important chara
 <br  />
 
 ```{r}
-tidy_hobbit$linenumber <- 1:nrow(tidy_hobbit)
+tidy_hobbit$linenumber <- 1:nrow(tidy_hobbit)  # label 'linenumbers'
 
-main_chr_pres <- tidy_hobbit %>% 
-  semi_join(main_chr, "word") %>%
+main_chr_pres <- tidy_hobbit %>%       
+  semi_join(main_chr, "word") %>%       # keep only the six main characters in the hobbit text
   ggplot() + 
   geom_point(
-    aes(word, linenumber)
+    aes(word, linenumber)              # plot character name and linenumber they appear in
   ) + 
   labs(title = "Main Character Apperances in 'The Hobbit'") +
   xlab("Character") + 
@@ -171,14 +171,14 @@ By the looks of it, Bilbo is basically mentioned every other sentence. There are
 #### Dwarf Character Count
 
 ```{r}
-dwarf_chr <- as.tibble(c("dwalin", "balin", "kili", "fili", "dori", "nori", "ori", "oin", "gloin", "bifur", "bofur", "bombur", "thorin")) %>%
-  unnest_tokens(word, value)
+dwarf_chr <- as.tibble(c("dwalin", "balin", "kili", "fili", "dori", "nori", "ori", "oin", "gloin", "bifur", "bofur", "bombur", "thorin")) %>%                      # a list of the 13 dwarves
+  unnest_tokens(word, value)   
 
-colnames(main_chr) <- "word"
+colnames(main_chr) <- "word"        # label the values column "word"
 
-dwarf_chr_num <- tidy_hobbit %>% 
-  semi_join(dwarf_chr, "word") %>%
-  count(word, sort = TRUE) %>%
+dwarf_chr_num <- tidy_hobbit %>%   
+  semi_join(dwarf_chr, "word") %>%  # keep only the dwarves names from the main text
+  count(word, sort = TRUE) %>%      # sort the dwarves by apperance count
   mutate(word = reorder(word, n)) %>%
   ggplot(aes(word, n)) + 
     geom_col(fill = "darkslateblue") + 
@@ -210,13 +210,13 @@ dwarf_chr_pres <- tidy_hobbit %>%
 dwarf_chr_pres
 ```
 
-The dwarves sure are a tribal bunch; if Tolkien mentions one of the background dwarves he almost always mentions the rest of them in the same breath. It’s hard to tell that Fili is a little bit more important than his twin Kili from this plot. Balin and Thorin only noticeable absence is when Bilbo finds the ring and beats off Gollum in a battle of wits. 
+The dwarves sure are a tribal bunch; if Tolkien mentions one of the background dwarves he almost always mentions the rest of them in the next breath. It’s hard to tell that Fili is a little bit more important than his twin Kili from this plot. Balin and Thorin's only noticeable absence is when Bilbo finds the ring and bests Gollum in a battle of wits. 
 
 <br  />
 
 ## Word Sentiment
 
-Using the tidy text package we can analyze word sentiment throughout the tale. I use two types of sentiment measurements in this analysis. Descriptive “NRC” package sentiment counts words that express an emotion, such as anger. Cumulative “AFINN” package sentiment is an overarching positive / negative word summation. 
+Using the tidy text package we can analyze word sentiment throughout the tale. I use two types of sentiment measurements in this analysis. Descriptive “NRC” package sentiment counts words that express an emotion, such as anger. Cumulative “AFINN” package sentiment is an overarching positive / negative word summation. There's a third type of sentiment library in tidytext, but I forget it's name right now.
 
 <br  />
 
@@ -238,13 +238,13 @@ These are the top 100 words Tolkien uses to describe joy in *The Hobbit*! I thin
 
 ```{r message=FALSE}
 joy_meter <- tidy_hobbit %>% 
-  inner_join(get_sentiments("nrc")) %>% 
+  inner_join(get_sentiments("nrc")) %>%  # same as above
   filter(sentiment == "joy") %>%
-  group_by(index = linenumber %/% 500) %>% 
-  summarise(sentiment = n()) %>% 
-  mutate(method = "NRC")
+  group_by(index = linenumber %/% 500) %>%  # group joy count by every 500 words
+  summarise(sentiment = n()) %>%  # sentiment = number of joy words (per 500 words) 
+  mutate(method = "NRC")          # call NRC method from tidy text
 
-joy_meter %>%
+joy_meter %>%                     # plot results
   ggplot(aes(index, sentiment)) +
   geom_col(show.legend = FALSE,
            fill = "orange") + 
@@ -289,6 +289,7 @@ sad_meter %>%
   theme_minimal() 
 ```
   
+The sad sentiment meter is much higher than the joy sentiment meter, which is strange because I came away from *The Hobbit* thinking it was a happy book. The sad words in the word cloud are a bit generic, let's try analyzing fear throughout the book. 
 
 <br  />
 
@@ -303,6 +304,8 @@ fear_cloud <- tidy_hobbit %>%
   with(wordcloud(word, n, max.words = 100,
                  color = brewer.pal(n = 8,"Dark2")))
 ```
+
+Now this is a good word cloud! Dragon, goblin, fire, escaped, darkness, spider! This visualization really gives you a feel for all of the dreadful things Bilbo and the dwarves endured on their quest for treasure. 
 
 ```{r, message=FALSE}
 fear_meter <- tidy_hobbit %>% 
@@ -322,8 +325,8 @@ fear_meter %>%
   theme_minimal()
 ```
 
-Oo, scary. 
-<br  />
+Also pretty high fear counts. Let's see how fear, sadness, and joy stack up against each other throughout the book.
+
 <br  />
 
 #### All Together Now
@@ -353,7 +356,7 @@ ggplot() +
   )
 ```
 
-To be expected. check out this other method, summation sentiment
+Just as I gathered from the individual meters, *The Hobbit* starts off cheerful enough but then becomes 300 pages of fear and sadness before a brief respite in the last chapter or two. But it's hard to be convienced, *The Hobbit* didn't feel like a scary or dreadful book! Let's try analyzing this with the AFINN sentiment analysis method. 
 
 <br  />
 
@@ -366,7 +369,7 @@ hobbit_sent <- tidy_hobbit %>%
   summarise(sentiment = sum(score)) %>% 
   mutate(method = "AFINN")
 
-hobbit_sent[["sign"]] = ifelse(hobbit_sent[["sentiment"]] >=0, "positive", "negative")
+hobbit_sent[["sign"]] = ifelse(hobbit_sent[["sentiment"]] >=0, "positive", "negative")     # Creating a sign variable based on positive or negative sentiment
 
 hobbit_sent %>%
   ggplot() + 
@@ -375,7 +378,7 @@ hobbit_sent %>%
                fill = sign)
            ) + 
   scale_fill_manual(name = "Sentiment",
-                    values = c("positive" = "royalblue4", "negative" = "red4"),
+                    values = c("positive" = "royalblue4", "negative" = "red4"),  # turning negative sentiment red, positive blue
                     guide = guide_legend(reverse=TRUE)) + 
   xlab("Book Progression Index") + 
   ylab("Sentiment Index") + 
@@ -383,21 +386,15 @@ hobbit_sent %>%
   theme_minimal()
 ```
 
+Well I guess that settles it, J.R.R. Tolkien's fantasy novel plainly a downer. Don't read *The Hobbit* if you're looking for a pick me up! I guess if anything these results can be used to help build the case for the power of compliment sandwiches and the like. 
 
-Well, I thought it was a positive book but I guess not. at least the beggining and end are nice. 
+There's a lot more you can do with text analysis, but I think this is a good stopping point for me. Text mining *The Hobbit* has actually been a really fun project, it made me follow the rabbit-hole of text mining further than I  originally thought I would. 
 
+There are many packages and methods for text mining, tidytext is just the one I happened to stumble upon. Some say that over 70% of the data created every day isn't nice rectangular datasets, but data embedded in maps and papers and other sub-optimal mediums. Maybe with the right text analysis tools and skills skill set, .pdf's don't have to be the place that data goes to die. 
 
+I hope you enjoyed following my own adventure in the realm of text mining!
 
+Untill next time, 
 
-
-
-
-
-
-
-
-
-
-
-
+\- Fisher 
 
