@@ -1,5 +1,5 @@
 ---
-title: "The Hobbit Text Analysis"
+title: "The Hobbit Text Mining"
 author: "Fisher Ankney"
 date: "1/25/2018"
 output: html_document
@@ -47,6 +47,7 @@ So here's the first look at our Hobbit text. A quick note: I cleaned up the hobb
 
 <br  />
 
+View The Data
 ```{r}
 head(the_hobbit)
 ```
@@ -57,28 +58,35 @@ head(tidy_hobbit)
 
 <br  />
 
-### Word Frequency Analysis 
+### Word Frequency
 
-Let's see some basic summaries on the hobbit text first.
+<br  />
 
+How many words are in *The Hobbit*?
 ```{r}
-# How many words are in The Hobbit?
 str_count(the_hobbit, " ") + 1
+```
 
-# How many sentences?
+<br  />
+
+How many sentences?
+```{r}
 str_count(the_hobbit, "[.!?]")
+```
 
-# How long should the book take to read?
+<br  />
+
+How long should the book take to read?
+```{r}
 ((str_count(the_hobbit, " ") + 1) / 200) / 60 # number of words / 200 words-per-minute / 60 minutes
 ```
 
 <br  />
 
-I chose to use the original variable the_hobbit, as tidy text doesn't retain the punctuation, and stop words still count as words. *str_count( )* counts how many times you're given variables appear within the string it's analyzing. 200 words-per-minute is a below average adult reading speed, but The Hobbit is a story best relished, so that'll do.
- 
-<br  />
-
 #### Frequency Plot
+
+What are the most common meaningful words in *The Hobbit*? To find out, let's create a frequency plot. These overturned bar graphs are some of my favorite to create.
+
 ```{r}
 tidy_hobbit %>%
   count(word, sort = TRUE) %>%          # count words
@@ -93,7 +101,7 @@ tidy_hobbit %>%
   theme_minimal()                       # I don't like the gray default theme
 ```
 
-The top five most common words in *The Hobbit* are Bilbo, dwarves, Thorin, time, and Gandalf. The only non-character word is time, but I bet the word time is pretty common in most novels. I'm suprised to see the word don't on the list, I would have classified it as a stop word. There isn't much to be suprised about on this list if you've read the book. If you haven't read the book, the list gives you a pretty good idea of what to expect!
+The most common words in *The Hobbit* are Bilbo, dwarves, Thorin, time, and Gandalf. The only non-character word is time, but I bet the word time is pretty common in most novels. I'm suprised to see the word "don't" on the list, I would have thought it was classified as a stop word. There isn't much to be suprised about on this list if you've read the book. If you haven't read the book, the list gives you a pretty good idea of what to expect!
 
 <br  />
 
@@ -112,18 +120,16 @@ The top 100 words used in The Hobbit are all jumbled together in this word cloud
 
 ## Character Analysis
 
-```{r}
-tidy_hobbit$linenumber <- 1:nrow(tidy_hobbit)
-```
+Now let's dig into the main characters of the novel. Who are the most important characters and where do they appear most in the book?
 
+<br  />
 
-Work in Progress
+#### Main Character Count
 ```{r}
 main_chr <- as.tibble(c("bilbo", "thorin", "gandalf", "smaug", "gollum", "bard")) %>%
   unnest_tokens(word, value)
 
 colnames(main_chr) <- "word"
-
 
 main_chr_num <- tidy_hobbit %>% 
   semi_join(main_chr, "word") %>%
@@ -134,8 +140,14 @@ main_chr_num <- tidy_hobbit %>%
 main_chr_num
 ```
 
+As we saw before, Bilbo is not only the most important character out of the six I've ranked, bilbo is the most common word of the entire book. Life is good being the protagonist! Thorin the dwarf king is mentioned some 250 times, and Gandalf is mentioned under 200 times. I would have thought Gandalf played a bigger role than Thorin, but I guess the stats don't lie. Ol' Gollum, Smaug, and Bard are pretty minor characters.
+
+<br  />
 
 ```{r}
+
+tidy_hobbit$linenumber <- 1:nrow(tidy_hobbit)
+
 main_chr_pres <- tidy_hobbit %>% 
   semi_join(main_chr, "word") %>%
   ggplot() + 
@@ -154,107 +166,75 @@ main_chr_pres
   
 ```
 
-
-
-
-tidy_hobbit %>%
-  count(word, sort = TRUE) %>%          # count words
-  filter(n > 80) %>%                    # only show words that have been used 80+ times
-  mutate(word = reorder(word, n)) %>%   # sorts words by decending occurance
-  ggplot(aes(word, n)) +                # plot the words vs number of occurances
-    geom_col(fill = "darkslateblue") +  # blue bars
-  xlab("Word") +                        # labels
-  ylab("Number of Occurances") + 
-  labs(title = "Most Common Meaningful Words in 'The Hobbit'") +
-  coord_flip() +                        # sideways box-plot for aestetic purposes
-  theme_minimal()                       # I don't like the gray default theme
-
-
-
-
-
-# Frequency of joy throught the book
-joy_meter <- tidy_hobbit %>% 
-  inner_join(get_sentiments("nrc")) %>% 
-  filter(sentiment == "joy") %>%
-  group_by(index = linenumber %/% 500) %>% 
-  summarise(sentiment = n()) %>% 
-  mutate(method = "NRC")
-
-```
-
-
-bilbo_count <- str_count(the_hobbit, "Bilbo")
-bilbo_count
-
-thorin_count <- str_count(the_hobbit, "Thorin")
-thorin_count
-
-gandalf_count <- str_count(the_hobbit, "Gandalf")
-gandalf_count
-
-smaug_count <- str_count(the_hobbit, "Smaug")
-smaug_count
-
-gollum_count <- str_count(the_hobbit, "Gollum")
-gollum_count
-
-bard_count <- str_count(the_hobbit, "Bard")
-bard_count
-```
-
-
-Work in Progress
-```{r, eval=FALSE}
-# The 13 Dwarves
-dwalin <- sum(str_count(tidy_hobbit$word, "dwalin"))
-balin <- sum(str_count(tidy_hobbit$word, "balin"))
-kili <- sum(str_count(tidy_hobbit$word, "kili"))
-fili <- sum(str_count(tidy_hobbit$word, "fili"))
-dori <- sum(str_count(tidy_hobbit$word, "dori"))
-nori <- sum(str_count(tidy_hobbit$word, "nori"))
-ori <- sum(str_count(tidy_hobbit$word, "ori"))
-oin <- sum(str_count(tidy_hobbit$word, "oin"))
-gloin <- sum(str_count(tidy_hobbit$word, "gloin"))
-bifur <- sum(str_count(tidy_hobbit$word, "bifur"))
-bofur <- sum(str_count(tidy_hobbit$word, "bofur"))
-bombur <- sum(str_count(tidy_hobbit$word, "bombur"))
-thorin <- sum(str_count(tidy_hobbit$word, "thorin"))
-
-# plot dwarf mentions most popular to least popular
-
-#dwarves <- as.tibble(c(dwalin, balin, kili, fili, dori,
-#             nori, ori, oin, gloin, bifur,
-#             bofur, bombur, thorin))
-
-#dwarves$names <- c("dwalin", "balin", "kili", "fili", "dori",
-#                   "nori", "ori", "oin", "gloin", "bifur",
-#                   "bofur", "bombur", "thorin")
-#dwarves
-```
-
+By the looks of it, Bilbo is mentioned every other sentence! There's two small gaps in Bilbos presence near the end of the book where it seems Bard takes the center stage. Devilish old Smaug is breifly mentioned in the first half of the book, something along the lines of "oh there's also a dragon guarding the gold but don't worry about it". Gandalf has an interesting timeline, he has three solid apperances in the tale, sitting out for the majority of the story-climatic burglary. 
 
 <br  />
 
-## Sentiment Analysis
+#### Dwarf Character Count
 
-```{r, eval=FALSE}
-## Adjective Analysis
+```{r}
+dwarf_chr <- as.tibble(c("dwalin", "balin", "kili", "fili", "dori", "nori", "ori", "oin", "gloin", "bifur", "bofur", "bombur", "thorin")) %>%
+  unnest_tokens(word, value)
 
-# Joyful Words 
-nrcjoy <- get_sentiments("nrc") %>%    # from the tidytext
-  filter(sentiment == "joy")
+colnames(main_chr) <- "word"
 
-happy_cloud <- tidy_hobbit %>%
-  inner_join(nrcjoy) %>%
-  count(word) %>%
-  with(wordcloud(word, n, max.words = 100,
+dwarf_chr_num <- tidy_hobbit %>% 
+  semi_join(dwarf_chr, "word") %>%
+  count(word, sort = TRUE) %>%
+  mutate(word = reorder(word, n)) %>%
+  ggplot(aes(word, n)) + 
+    geom_col(fill = "darkslateblue")
+dwarf_chr_num
+```
+
+Poor Ori. It seems like Oir, Nori, Bifur, Oin, Bofur, Dwalin and Gloin are nothing but background characters. Fili is mentioned noticably more than his twin Kili, and the roundest of the dwarves, Bombur is actually pretty popular in his comic relief. Balin is much more important than his brother Dwalin, which makes sense as he's the second eldest dwarf and often the leader of the bunch in Thorin's absence.
+
+<br  />
+
+
+```{r}
+dwarf_chr_pres <- tidy_hobbit %>% 
+  semi_join(dwarf_chr, "word") %>%
+  ggplot() + 
+  geom_point(
+    aes(word, linenumber)
+  ) + 
+  labs(title = "Dwarve Apperances") +
+  xlab("Dwarf") + 
+  ylab("")+
+  coord_flip() + 
+  theme_minimal() + 
+  theme(axis.title.x=element_blank(),
+        axis.text.x=element_blank(),
+        axis.ticks.x=element_blank())
+dwarf_chr_pres
+```
+
+
+Ignoring Thorin, Balin, and Bombur, each of the other ten dwarves are almost always mentioned all together. Fili and Kili's presence is almost identical, it's hard to spot why Fili is apparently more prominent. 
+
+<br  />
+
+## Word Sentiment
+
+Using the tidy text library we can analyze sentiment throughout the tale. Let's just jump in and start exploring! 
+
+```{r, message=FALSE, warning=FALSE}
+nrcjoy <- get_sentiments("nrc") %>%    # using the nrc sentiment package in the tidy text library
+  filter(sentiment == "joy")           # using only words that have a sentiment of joy
+
+happy_cloud <- tidy_hobbit %>%         # put the tidy_hobbit into a new variable
+  inner_join(nrcjoy) %>%               # only keep words that match the nrcjoy variable 
+  count(word) %>%                      # now count the number of times each word is used
+  with(wordcloud(word, n, max.words = 100,  # create a word cloud based on this
                  color = brewer.pal(n = 8,"Dark2")))
 happy_cloud
 ```
 
-```{r, eval=FALSE}
-# Frequency of joy throught the book
+The top 100 words to describe joy in *The Hobbit*! I think this is the coolest visualization yet. So many of these adjectives just nail the adventurous spirit and comradery present in the book.
+
+
+```{r}
 joy_meter <- tidy_hobbit %>% 
   inner_join(get_sentiments("nrc")) %>% 
   filter(sentiment == "joy") %>%
@@ -270,7 +250,14 @@ joy_meter %>%
   ylab("Joy Meter") + 
   labs(title = "Words with Joyous Sentiment in 'The Hobbit'") +
   theme_minimal()
+```
 
+
+
+joy joy joy
+
+
+```{r}
 # Sad Words 
 nrcsad <- get_sentiments("nrc") %>%    # from the tidytext
   filter(sentiment == "sadness")
@@ -281,7 +268,6 @@ sad_cloud <- tidy_hobbit %>%
   with(wordcloud(word, n, max.words = 100,
                  color = brewer.pal(n = 8,"Dark2")))
 sad_cloud
-
 
 # Frequency of sadness throught the book
 sad_meter <- tidy_hobbit %>% 
@@ -299,8 +285,11 @@ sad_meter %>%
   ylab("Sad Meter") + 
   labs(title = "Words with Sad Sentiment in 'The Hobbit'") +
   theme_minimal() 
-
+```
   
+  
+  
+```{r}  
 ## Fearful Words
 nrcfear <- get_sentiments("nrc") %>%   
   filter(sentiment == "fear")
@@ -328,8 +317,10 @@ fear_meter %>%
   ylab("Fear Meter") + 
   labs(title = "Words with Fear Sentiment in 'The Hobbit'") +
   theme_minimal()
+```
 
 
+```{r}
 ### Happy, Sad, and Fear all together now
 ggplot() + 
   geom_smooth(aes(fear_meter$index,
@@ -356,7 +347,7 @@ ggplot() +
   )
 ```
 
-```{r, eval=FALSE}
+```{r}
 # Overall Sentiment
 hobbit_sent <- tidy_hobbit %>% 
   inner_join(get_sentiments("afinn")) %>% 
@@ -381,6 +372,8 @@ hobbit_sent %>%
   theme_minimal()
 ```
 
+
+the end
 
 
 
