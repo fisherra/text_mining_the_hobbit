@@ -1,3 +1,6 @@
+## Text Mining The Hobbit
+
+
 After recently finishing J.R.R. Tolkien's *The Hobbit*, I wanted to dive
 further into Tolkien’s world by trying my hand at text mining the book
 in R. Without any previous text mining experience or goals for the
@@ -501,4 +504,4 @@ mining!
 
 Untill next time,
 
-- Fisher
+\- Fisher
